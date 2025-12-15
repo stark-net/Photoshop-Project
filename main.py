@@ -110,7 +110,7 @@ def update_cursor_position(event):
     else:
         coord_label.config(text="X: -  Y: -")
 
-# ========== LIVE PREVIEW ==========
+# ========== LIVE PREVIEW & FREEHAND DRAWING (FIXED) ==========
 def show_live_preview(temp_img):
     global preview_photo
     rgb = cv2.cvtColor(temp_img, cv2.COLOR_BGR2RGB)
@@ -125,7 +125,6 @@ def on_mouse_drag(event):
     if not drawing or current_image is None:
         return
 
-    temp = current_image.copy()
     h, w = current_image.shape[:2]
     sx = w / 720.0
     sy = h / 520.0
@@ -137,10 +136,14 @@ def on_mouse_drag(event):
         if last_x is not None:
             prev_x = int(last_x * sx)
             prev_y = int(last_y * sy)
-            cv2.line(temp, (prev_x, prev_y), (curr_x, curr_y), current_color, line_thickness)
+            # Draw directly on current_image for immediate feedback
+            cv2.line(current_image, (prev_x, prev_y), (curr_x, curr_y), current_color, line_thickness)
+            update_display()  # Refresh display after each segment
         last_x = event.x
         last_y = event.y
     else:
+        # Live preview for shapes/crop
+        temp = current_image.copy()
         x1 = int(start_x * sx)
         y1 = int(start_y * sy)
         x2 = curr_x
@@ -169,7 +172,7 @@ def on_mouse_drag(event):
             if axes[0] > 0 and axes[1] > 0:
                 cv2.ellipse(temp, center, axes, 0, 0, 360, color, thickness)
 
-    show_live_preview(temp)
+        show_live_preview(temp)
 
 # ========== DRAWING START/STOP ==========
 def start_draw(event):
